@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 import styled from "styled-components";
 
@@ -77,10 +78,11 @@ const Room = (props) => {
     const sendChannel = useRef();
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
+    const { userRoomID } = useParams();
 
     useEffect(() => {
         socketRef.current = io.connect("http://localhost:8000");
-        socketRef.current.emit("join room", props.match.params.roomID);
+        socketRef.current.emit("join room", userRoomID);
 
         socketRef.current.on('other user', userID => {
             callUser(userID);
@@ -102,6 +104,13 @@ const Room = (props) => {
 
     function callUser(userID) {
         peerRef.current = createPeer(userID);
+        sendChannel.current = peerRef.current.createDataChannel("sendChannel");
+        sendChannel.current.onmessage = handleReceiveMessage;
+
+    }
+
+    function handleReceiveMessage(e) {
+        setMessages(messages => [...messages, {yours: false, value: e.data }]);
     }
 
     function createPeer(userID) {
@@ -139,6 +148,10 @@ const Room = (props) => {
 
     function handleOffer(incoming) {
         peerRef.current = createPeer();
+        peerRef.current.ondatachannel = (event) => {
+            sendChannel.current = event.channel;
+            sendChannel.current.onmessage = handleReceiveMessage;
+        };
         const desc = new RTCSessionDescription(incoming.sdp);
         peerRef.current.setRemoteDescription(desc).then(() => {
         }).then(() => {
@@ -179,6 +192,12 @@ const Room = (props) => {
 
     function handleChange(e) {
         setText(e.target.value);
+    }
+
+    function sendMessage() {
+        sendChannel.current.send(text);
+        setMessages(messages => [...messages, { yours: true, value: text }]);
+        setText("");
     }
 
     function renderMessage(message, index) {

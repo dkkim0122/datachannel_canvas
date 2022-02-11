@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 import styled from "styled-components";
 import Canvas from "../components/Canvas/Canvas";
+import CodeEditor from "../components/CodeEditor/CodeEditor";
 
 const Messages = styled.div`
   width: 100%;
@@ -255,6 +256,7 @@ const Room = (props) => {
         recievedCanvasData={recievedCanvasData}
         CanvasToRoom={CanvasToRoom}
       />
+      <CodeEditor />
     </div>
   );
 };

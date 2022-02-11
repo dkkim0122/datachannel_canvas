@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@codemirror/basic-setup": "^0.19.1",
+    "@codemirror/lang-javascript": "^0.19.7",
+    "@codemirror/view": "^0.19.42",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "codemirror": "^5.65.1",
     "immer": "^7.0.7",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -13,7 +17,10 @@
     "react-scripts": "3.4.3",
     "socket.io-client": "^2.3.0",
     "styled-components": "^5.1.1",
-    "uuid": "^8.3.0"
+    "uuid": "^8.3.0",
+    "y-codemirror.next": "^0.1.1",
+    "y-webrtc": "^10.2.2",
+    "yjs": "^13.5.27"
   },
   "scripts": {
     "start": "react-scripts start",

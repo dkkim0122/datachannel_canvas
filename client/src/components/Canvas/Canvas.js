@@ -151,7 +151,7 @@ const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
 
   return (
     <div>
-        <button onClick={changeZofCanvas}>switch funtion</button>
+        <button onClick={changeZofCanvas}>switch function</button>
       <div className="color-picker-wrapper">
         <input
           className="color-picker"

@@ -18,29 +18,41 @@ const Room = (props) => {
   const [messages, setMessages] = useState([]);
   const [recievedCanvasData, setrecievedCanvasData] = useState();
   const { userRoomID } = useParams();
+  const userAudio = useRef();
+  const partnerAudio = useRef();
+  const userStream = useRef();
 
   useEffect(() => {
-    socketRef.current = io.connect("http://localhost:8000");
-    socketRef.current.emit("join room", userRoomID);
+    navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+      userAudio.current.srcObject = stream;
+      userStream.current = stream;
 
-    socketRef.current.on("other user", (userID) => {
-      callUser(userID);
-      otherUser.current = userID;
+
+      socketRef.current = io.connect("http://localhost:8000");
+      // socketRef.current = io.connect("http://143.248.196.85:8000");  //welcomekaist
+      socketRef.current.emit("join room", userRoomID);
+
+      socketRef.current.on("other user", (userID) => {
+        callUser(userID);
+        otherUser.current = userID;
+      });
+  
+      socketRef.current.on("user joined", (userID) => {
+        otherUser.current = userID;
+      });
+  
+      socketRef.current.on("offer", handleOffer);
+  
+      socketRef.current.on("answer", handleAnswer);
+  
+      socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
     });
-
-    socketRef.current.on("user joined", (userID) => {
-      otherUser.current = userID;
-    });
-
-    socketRef.current.on("offer", handleOffer);
-
-    socketRef.current.on("answer", handleAnswer);
-
-    socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
+    
   }, []);
 
   function callUser(userID) {
     peerRef.current = createPeer(userID);
+    userStream.current.getTracks().forEach(track => peerRef.current.addTrack(track, userStream.current));
     // canvas
     canvasChannel.current = peerRef.current.createDataChannel("canvasChannel");
     canvasChannel.current.onmessage = handleReceiveCanvas;
@@ -59,6 +71,28 @@ const Room = (props) => {
     setMessages((messages) => [...messages, { yours: false, value: e.data }]);
   }
 
+
+//   function handleRecieveCall(incoming) {
+//     peerRef.current = createPeer();
+//     // sdp 는 our actual offered data 를 represent 한다. 
+//     const desc = new RTCSessionDescription(incoming.sdp);
+//     peerRef.current.setRemoteDescription(desc).then(() => {
+//         userStream.current.getTracks().forEach(track => peerRef.current.addTrack(track, userStream.current));
+//     }).then(() => {
+//         return peerRef.current.createAnswer();
+//     }).then(answer => {
+//         return peerRef.current.setLocalDescription(answer);
+//     }).then(() => {
+//         // 여기선 answer 에 담는 payload를 만든다. 
+//         const payload = {
+//             target: incoming.caller,
+//             caller: socketRef.current.id,
+//             sdp: peerRef.current.localDescription
+//         }
+//         socketRef.current.emit("answer", payload);
+//     })
+// }
+
   function createPeer(userID) {
     const peer = new RTCPeerConnection({
       iceServers: [
@@ -72,7 +106,7 @@ const Room = (props) => {
         },
       ],
     });
-
+    peer.ontrack = handleTrackEvent;
     peer.onicecandidate = handleICECandidateEvent;
     peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID);
 
@@ -110,7 +144,7 @@ const Room = (props) => {
     const desc = new RTCSessionDescription(incoming.sdp);
     peerRef.current
       .setRemoteDescription(desc)
-      .then(() => {})
+      .then(() => {userStream.current.getTracks().forEach(track => peerRef.current.addTrack(track, userStream.current));})
       .then(() => {
         return peerRef.current.createAnswer();
       })
@@ -154,9 +188,14 @@ const Room = (props) => {
 
   // Canvas
   function sendCanvas(canvasData) {
-    canvasChannel.current.send(canvasData);
-    // console.log(canvasData);
-    setMessages(canvasData);
+    if (canvasChannel.current !== undefined && canvasChannel.current.readyState === "open") {
+      console.log(canvasChannel.current, "debug!");
+      canvasChannel.current.send(canvasData);
+      // console.log(canvasData);
+      setMessages(canvasData);
+    } else {
+      console.log();
+    }
   }
 
   // received data from canvas component to room component
@@ -186,6 +225,9 @@ const Room = (props) => {
   //     </PartnerRow>
   //   );
   // }
+  function handleTrackEvent(e) {
+    partnerAudio.current.srcObject = e.streams[0];
+};
 
   return (
     <div>
@@ -196,6 +238,8 @@ const Room = (props) => {
         placeholder="Say something....."
       /> */}
       {/* <Button onClick={sendMessage}>Send..</Button> */}
+      <audio autoPlay ref={userAudio} />
+      <audio autoPlay ref={partnerAudio} />
       
       <Canvas
         recievedCanvasData={recievedCanvasData}

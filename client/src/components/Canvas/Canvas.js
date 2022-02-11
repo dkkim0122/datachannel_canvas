@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 // import io from "socket.io-client";
 import "./Canvas.css";
-import CodeEditor from "../CodeEditor/CodeEditor";
 
 const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
   const { current: canvasDetails } = useRef({ color: "green"});
@@ -139,8 +138,20 @@ const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
     };
   }, []);
 
+  const changeZ = useRef(null);
+  
+  const [zIndex, setZindex] = useState(0);
+  const changeZofCanvas = () => {
+    // console.log(changeZ.current.style);
+    setZindex((index) => (index === 1)?0:1);
+
+  }
+
+
+
   return (
-    <div className="canvas-wrapper">
+    <div>
+        <button onClick={changeZofCanvas}>switch funtion</button>
       <div className="color-picker-wrapper">
         <input
           className="color-picker"
@@ -149,8 +160,10 @@ const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
           onChange={(e) => changeColor(e.target.value)}
         />
       </div>
-      <canvas className="canvas" id="canvas"></canvas>
-      <CodeEditor />
+      <canvas className="canvas" id="canvas" style={{zIndex:zIndex}}></canvas>
+      <div className="code-editor">
+      </div>
+      
     </div>
   );
 };

@@ -1,9 +1,12 @@
 .canvas-wrapper {
     width: 100%;
     height: auto;
+    float: left;
+    position: relative;
 }
 
 .canvas {
-    background-color: #f5f5dc;
+    position: absolute;
+    background-color: none;
     width: 100%;
 }

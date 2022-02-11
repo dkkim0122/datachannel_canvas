@@ -6,64 +6,7 @@ import Canvas from "../components/Canvas/Canvas";
 import CodeEditor from "../components/CodeEditor/CodeEditor";
 import './Room.css'
 
-const Messages = styled.div`
-  width: 100%;
-  height: 60%;
-  border: 1px solid black;
-  margin-top: 10px;
-  overflow: scroll;
-`;
 
-const MessageBox = styled.textarea`
-  width: 100%;
-  height: 30%;
-`;
-
-const Button = styled.div`
-  width: 50%;
-  border: 1px solid black;
-  margin-top: 15px;
-  height: 5%;
-  border-radius: 5px;
-  cursor: pointer;
-  background-color: black;
-  color: white;
-  font-size: 18px;
-`;
-
-const MyRow = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-`;
-
-const MyMessage = styled.div`
-  width: 45%;
-  background-color: blue;
-  color: white;
-  padding: 10px;
-  margin-right: 5px;
-  text-align: center;
-  border-top-right-radius: 10%;
-  border-bottom-right-radius: 10%;
-`;
-
-const PartnerRow = styled(MyRow)`
-  justify-content: flex-start;
-`;
-
-const PartnerMessage = styled.div`
-  width: 45%;
-  background-color: grey;
-  color: white;
-  border: 1px solid lightgray;
-  padding: 10px;
-  margin-left: 5px;
-  text-align: center;
-  border-top-left-radius: 10%;
-  border-bottom-left-radius: 10%;
-`;
 
 const Room = (props) => {
   const peerRef = useRef();
@@ -222,30 +165,30 @@ const Room = (props) => {
     sendCanvas(sendFromCanvas);
   }
 
-  function sendMessage() {
-    sendChannel.current.send(text);
-    setMessages((messages) => [...messages, { yours: true, value: text }]);
-    setText("");
-  }
+  // function sendMessage() {
+  //   sendChannel.current.send(text);
+  //   setMessages((messages) => [...messages, { yours: true, value: text }]);
+  //   setText("");
+  // }
 
-  function renderMessage(message, index) {
-    if (message.yours) {
-      return (
-        <MyRow key={index}>
-          <MyMessage>{message.value}</MyMessage>
-        </MyRow>
-      );
-    }
+  // function renderMessage(message, index) {
+  //   if (message.yours) {
+  //     return (
+  //       <MyRow key={index}>
+  //         <MyMessage>{message.value}</MyMessage>
+  //       </MyRow>
+  //     );
+  //   }
 
-    return (
-      <PartnerRow key={index}>
-        <PartnerMessage>{message.value}</PartnerMessage>
-      </PartnerRow>
-    );
-  }
+  //   return (
+  //     <PartnerRow key={index}>
+  //       <PartnerMessage>{message.value}</PartnerMessage>
+  //     </PartnerRow>
+  //   );
+  // }
 
   return (
-    <div className="room-wrapper">
+    <div>
       {/* <Messages>{messages.map(renderMessage)}</Messages> */}
       {/* <MessageBox
         value={text}
@@ -253,10 +196,12 @@ const Room = (props) => {
         placeholder="Say something....."
       /> */}
       {/* <Button onClick={sendMessage}>Send..</Button> */}
+      
       <Canvas
         recievedCanvasData={recievedCanvasData}
         CanvasToRoom={CanvasToRoom}
       />
+      <CodeEditor />
     </div>
     
   );

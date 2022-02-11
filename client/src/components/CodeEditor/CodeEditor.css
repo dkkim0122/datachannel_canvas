@@ -1,7 +1,8 @@
 .code-editor {
     position: relative;
-    width: 100%;
+    width: 50%;
     text-align: left;
     overflow: auto;
     background-color: #f3f9ff;
+    float: right;
 }

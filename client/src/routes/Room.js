@@ -106,6 +106,7 @@ const Room = (props) => {
 
   // canvas
   function handleReceiveCanvas(e) {
+    // console.log(e.data, "handlerecieve");
     setrecievedCanvasData(e.data); // recievedCanvasData = e.data
   }
 
@@ -153,8 +154,13 @@ const Room = (props) => {
   function handleOffer(incoming) {
     peerRef.current = createPeer();
     peerRef.current.ondatachannel = (event) => {
-      sendChannel.current = event.channel;
-      sendChannel.current.onmessage = handleReceiveMessage;
+      if (event.channel.label === "sendChannel") {
+        sendChannel.current = event.channel;
+        sendChannel.current.onmessage = handleReceiveMessage;
+      } else if (event.channel.label === "canvasChannel") {
+        canvasChannel.current = event.channel;
+        canvasChannel.current.onmessage = handleReceiveCanvas;
+      }
     };
     const desc = new RTCSessionDescription(incoming.sdp);
     peerRef.current
@@ -204,14 +210,14 @@ const Room = (props) => {
   // Canvas
   function sendCanvas(canvasData) {
     canvasChannel.current.send(canvasData);
+    // console.log(canvasData);
     setMessages(canvasData);
   }
 
   // received data from canvas component to room component
   function CanvasToRoom(sendFromCanvas) {
-    console.log(sendFromCanvas);
+    // console.log(sendFromCanvas);
     sendCanvas(sendFromCanvas);
-    
   }
 
   function sendMessage() {
@@ -238,17 +244,16 @@ const Room = (props) => {
 
   return (
     <div>
-      <Messages>{messages.map(renderMessage)}</Messages>
-      <MessageBox
+      {/* <Messages>{messages.map(renderMessage)}</Messages> */}
+      {/* <MessageBox
         value={text}
         onChange={handleChange}
         placeholder="Say something....."
-      />
-      <Button onClick={sendMessage}>Send..</Button>
+      /> */}
+      {/* <Button onClick={sendMessage}>Send..</Button> */}
       <Canvas
         recievedCanvasData={recievedCanvasData}
         CanvasToRoom={CanvasToRoom}
-        onChange={handleChange}
       />
     </div>
   );

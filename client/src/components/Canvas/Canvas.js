@@ -1,23 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
+// import io from "socket.io-client";
 import "./Canvas.css";
 
 const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
-  const { current: canvasDetails } = useRef({ color: "green", socketUrl: "/" });
+  const { current: canvasDetails } = useRef({ color: "green"});
 
   const changeColor = (newColor) => {
     canvasDetails.color = newColor;
   };
 
   useEffect(() => {
-    console.log("client env", process.env.NODE_ENV);
-    if (process.env.NODE_ENV === "development") {
-      canvasDetails.socketUrl = "http://143.248.196.85:4000";
-    }
-    console.log("socketUrl", canvasDetails.socketUrl);
-    canvasDetails.socket = io.connect(canvasDetails.socketUrl, () => {
-      console.log("connecting to server");
-    });
+    // console.log("client env", process.env.NODE_ENV);
+    // if (process.env.NODE_ENV === "development") {
+    //   canvasDetails.socketUrl = "http://143.248.196.85:4000";
+    // }
+    // console.log("socketUrl", canvasDetails.socketUrl);
+    // canvasDetails.socket = io.connect(canvasDetails.socketUrl, () => {
+    //   console.log("connecting to server");
+    // });
     // canvasDetails.socket.on('image-data', (data) => {
     //     const image = new Image()
     //     const canvas = document.getElementById('canvas');
@@ -33,10 +33,14 @@ const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
     image.src = recievedCanvasData;
+    console.log(recievedCanvasData, "recieve!");
+    
     image.addEventListener("load", () => {
       context.drawImage(image, 0, 0);
     });
-  }, []);
+  });
+
+  
 
   useEffect(() => {
     const mouseMoveHandler = (e, type) => {

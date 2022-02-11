@@ -1,0 +1,9 @@
+.canvas-wrapper {
+    width: 100%;
+    height: auto;
+}
+
+.canvas {
+    background-color: #f5f5dc;
+    width: 100%;
+}

@@ -1,0 +1,7 @@
+.code-editor {
+    position: relative;
+    width: 100%;
+    text-align: left;
+    overflow: auto;
+    background-color: #f3f9ff;
+}

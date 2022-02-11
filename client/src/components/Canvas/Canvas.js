@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 // import io from "socket.io-client";
 import "./Canvas.css";
+import CodeEditor from "../CodeEditor/CodeEditor";
 
 const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
   const { current: canvasDetails } = useRef({ color: "green"});
@@ -10,6 +11,7 @@ const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
   };
 
   useEffect(() => {
+    console.log("useeffect first");
     // console.log("client env", process.env.NODE_ENV);
     // if (process.env.NODE_ENV === "development") {
     //   canvasDetails.socketUrl = "http://143.248.196.85:4000";
@@ -148,6 +150,7 @@ const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
         />
       </div>
       <canvas className="canvas" id="canvas"></canvas>
+      <CodeEditor />
     </div>
   );
 };

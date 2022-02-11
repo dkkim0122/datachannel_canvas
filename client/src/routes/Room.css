@@ -1,0 +1,5 @@
+.room-wrapper {
+    height: auto;
+    display: flex;
+    justify-content: start;
+}

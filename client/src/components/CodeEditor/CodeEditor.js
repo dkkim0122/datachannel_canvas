@@ -9,6 +9,9 @@ import { keymap } from "@codemirror/view";
 import { javascript } from "@codemirror/lang-javascript";
 import React, { useEffect } from "react";
 import * as random from "lib0/random";
+import { useParams } from "react-router-dom";
+import "./CodeEditor.css"
+import { Line } from '@codemirror/text';
 
 export const usercolors = [
   { color: "#30bced", light: "#30bced33" },
@@ -23,11 +26,14 @@ export const usercolors = [
 
 export const userColor = usercolors[random.uint32() % usercolors.length];
 
+
+
 const CodeEditor = () => {
+    // const {userRoomID} = useParams();
   useEffect(() => {
     const ydoc = new Y.Doc();
     // const provider = new WebrtcProvider('codemirror6-demo-room', ydoc)
-    const provider = new WebrtcProvider("webrtc-test", ydoc, {
+    const provider = new WebrtcProvider("testrtc", ydoc, {
       signaling: ["wss://signaling.yjs.dev"],
     });
     // const provider = new WebsocketProvider(
@@ -54,12 +60,14 @@ const CodeEditor = () => {
       ],
     });
 
+    
     const view = new EditorView({
       state,
       parent: /** @type {HTMLElement} */ (document.querySelector("#editor")),
     });
-  });
-  return <div id="editor" />;
+
+  },[]);
+  return <div className="code-editor" id="editor" />;
 };
 
 export default CodeEditor;

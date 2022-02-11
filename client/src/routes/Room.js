@@ -4,6 +4,7 @@ import io from "socket.io-client";
 import styled from "styled-components";
 import Canvas from "../components/Canvas/Canvas";
 import CodeEditor from "../components/CodeEditor/CodeEditor";
+import './Room.css'
 
 const Messages = styled.div`
   width: 100%;
@@ -244,7 +245,7 @@ const Room = (props) => {
   }
 
   return (
-    <div>
+    <div className="room-wrapper">
       {/* <Messages>{messages.map(renderMessage)}</Messages> */}
       {/* <MessageBox
         value={text}
@@ -256,8 +257,8 @@ const Room = (props) => {
         recievedCanvasData={recievedCanvasData}
         CanvasToRoom={CanvasToRoom}
       />
-      <CodeEditor />
     </div>
+    
   );
 };
 

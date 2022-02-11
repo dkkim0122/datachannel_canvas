@@ -2,39 +2,31 @@ import React, { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 import styled from "styled-components";
-
-const Container = styled.div`
-    height: 100vh;
-    width: 50%;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-`;
+import Canvas from "../components/Canvas/Canvas";
 
 const Messages = styled.div`
-    width: 100%;
-    height: 60%;
-    border: 1px solid black;
-    margin-top: 10px;
-    overflow: scroll;
+  width: 100%;
+  height: 60%;
+  border: 1px solid black;
+  margin-top: 10px;
+  overflow: scroll;
 `;
 
 const MessageBox = styled.textarea`
-    width: 100%;
-    height: 30%;
+  width: 100%;
+  height: 30%;
 `;
 
 const Button = styled.div`
-    width: 50%;
-    border: 1px solid black;
-    margin-top: 15px;
-    height: 5%;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: black;
-    color: white;
-    font-size: 18px;
+  width: 50%;
+  border: 1px solid black;
+  margin-top: 15px;
+  height: 5%;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: black;
+  color: white;
+  font-size: 18px;
 `;
 
 const MyRow = styled.div`
@@ -72,163 +64,194 @@ const PartnerMessage = styled.div`
 `;
 
 const Room = (props) => {
-    const peerRef = useRef();
-    const socketRef = useRef();
-    const otherUser = useRef();
-    const sendChannel = useRef();
-    const [text, setText] = useState("");
-    const [messages, setMessages] = useState([]);
-    const { userRoomID } = useParams();
+  const peerRef = useRef();
+  const socketRef = useRef();
+  const otherUser = useRef();
+  const sendChannel = useRef();
+  const canvasChannel = useRef();
+  const [text, setText] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [recievedCanvasData, setrecievedCanvasData] = useState();
+  const { userRoomID } = useParams();
 
-    useEffect(() => {
-        socketRef.current = io.connect("http://localhost:8000");
-        socketRef.current.emit("join room", userRoomID);
+  useEffect(() => {
+    socketRef.current = io.connect("http://localhost:8000");
+    socketRef.current.emit("join room", userRoomID);
 
-        socketRef.current.on('other user', userID => {
-            callUser(userID);
-            otherUser.current = userID;
-        });
+    socketRef.current.on("other user", (userID) => {
+      callUser(userID);
+      otherUser.current = userID;
+    });
 
-        socketRef.current.on("user joined", userID => {
-            otherUser.current = userID;
-        });
+    socketRef.current.on("user joined", (userID) => {
+      otherUser.current = userID;
+    });
 
-        socketRef.current.on("offer", handleOffer);
+    socketRef.current.on("offer", handleOffer);
 
-        socketRef.current.on("answer", handleAnswer);
+    socketRef.current.on("answer", handleAnswer);
 
-        socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
+    socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
+  }, []);
 
-    }, []);
+  function callUser(userID) {
+    peerRef.current = createPeer(userID);
+    // canvas
+    canvasChannel.current = peerRef.current.createDataChannel("canvasChannel");
+    canvasChannel.current.onmessage = handleReceiveCanvas;
 
+    sendChannel.current = peerRef.current.createDataChannel("sendChannel");
+    sendChannel.current.onmessage = handleReceiveMessage;
+  }
 
-    function callUser(userID) {
-        peerRef.current = createPeer(userID);
-        sendChannel.current = peerRef.current.createDataChannel("sendChannel");
-        sendChannel.current.onmessage = handleReceiveMessage;
+  // canvas
+  function handleReceiveCanvas(e) {
+    setrecievedCanvasData(e.data); // recievedCanvasData = e.data
+  }
 
-    }
+  function handleReceiveMessage(e) {
+    setMessages((messages) => [...messages, { yours: false, value: e.data }]);
+  }
 
-    function handleReceiveMessage(e) {
-        setMessages(messages => [...messages, {yours: false, value: e.data }]);
-    }
+  function createPeer(userID) {
+    const peer = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: "stun:stun.stunprotocol.org",
+        },
+        {
+          urls: "turn:numb.viagenie.ca",
+          credential: "muazkh",
+          username: "webrtc@live.com",
+        },
+      ],
+    });
 
-    function createPeer(userID) {
-        const peer = new RTCPeerConnection({
-            iceServers: [
-                {
-                    urls: "stun:stun.stunprotocol.org"
-                },
-                {
-                    urls: 'turn:numb.viagenie.ca',
-                    credential: 'muazkh',
-                    username: 'webrtc@live.com'
-                },
-            ]
-        });
+    peer.onicecandidate = handleICECandidateEvent;
+    peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID);
 
-        peer.onicecandidate = handleICECandidateEvent;
-        peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID);
+    return peer;
+  }
 
-        return peer;
-    }
-
-    function handleNegotiationNeededEvent(userID) {
-        peerRef.current.createOffer().then(offer => {
-            return peerRef.current.setLocalDescription(offer);
-        }).then(() => {
-            const payload = {
-                target: userID,
-                caller: socketRef.current.id,
-                sdp: peerRef.current.localDescription
-            };
-            socketRef.current.emit("offer", payload);
-        }).catch(e => console.log(e));
-    }
-
-    function handleOffer(incoming) {
-        peerRef.current = createPeer();
-        peerRef.current.ondatachannel = (event) => {
-            sendChannel.current = event.channel;
-            sendChannel.current.onmessage = handleReceiveMessage;
+  function handleNegotiationNeededEvent(userID) {
+    peerRef.current
+      .createOffer()
+      .then((offer) => {
+        return peerRef.current.setLocalDescription(offer);
+      })
+      .then(() => {
+        const payload = {
+          target: userID,
+          caller: socketRef.current.id,
+          sdp: peerRef.current.localDescription,
         };
-        const desc = new RTCSessionDescription(incoming.sdp);
-        peerRef.current.setRemoteDescription(desc).then(() => {
-        }).then(() => {
-            return peerRef.current.createAnswer();
-        }).then(answer => {
-            return peerRef.current.setLocalDescription(answer);
-        }).then(() => {
-            const payload = {
-                target: incoming.caller,
-                caller: socketRef.current.id,
-                sdp: peerRef.current.localDescription
-            }
-            socketRef.current.emit("answer", payload);
-        })
+        socketRef.current.emit("offer", payload);
+      })
+      .catch((e) => console.log(e));
+  }
+
+  function handleOffer(incoming) {
+    peerRef.current = createPeer();
+    peerRef.current.ondatachannel = (event) => {
+      sendChannel.current = event.channel;
+      sendChannel.current.onmessage = handleReceiveMessage;
+    };
+    const desc = new RTCSessionDescription(incoming.sdp);
+    peerRef.current
+      .setRemoteDescription(desc)
+      .then(() => {})
+      .then(() => {
+        return peerRef.current.createAnswer();
+      })
+      .then((answer) => {
+        return peerRef.current.setLocalDescription(answer);
+      })
+      .then(() => {
+        const payload = {
+          target: incoming.caller,
+          caller: socketRef.current.id,
+          sdp: peerRef.current.localDescription,
+        };
+        socketRef.current.emit("answer", payload);
+      });
+  }
+
+  function handleAnswer(message) {
+    const desc = new RTCSessionDescription(message.sdp);
+    peerRef.current.setRemoteDescription(desc).catch((e) => console.log(e));
+  }
+
+  function handleICECandidateEvent(e) {
+    if (e.candidate) {
+      const payload = {
+        target: otherUser.current,
+        candidate: e.candidate,
+      };
+      socketRef.current.emit("ice-candidate", payload);
     }
+  }
 
-    function handleAnswer(message) {
-        const desc = new RTCSessionDescription(message.sdp);
-        peerRef.current.setRemoteDescription(desc).catch(e => console.log(e));
-    }
+  function handleNewICECandidateMsg(incoming) {
+    const candidate = new RTCIceCandidate(incoming);
 
-    function handleICECandidateEvent(e) {
-        if (e.candidate) {
-            const payload = {
-                target: otherUser.current,
-                candidate: e.candidate,
-            }
-            socketRef.current.emit("ice-candidate", payload);
-        }
-    }
+    peerRef.current.addIceCandidate(candidate).catch((e) => console.log(e));
+  }
 
-    function handleNewICECandidateMsg(incoming) {
-        const candidate = new RTCIceCandidate(incoming);
+  function handleChange(e) {
+    setText(e.target.value);
+  }
 
-        peerRef.current.addIceCandidate(candidate)
-            .catch(e => console.log(e));
-    }
+  // Canvas
+  function sendCanvas(canvasData) {
+    canvasChannel.current.send(canvasData);
+    setMessages(canvasData);
+  }
 
-    function handleChange(e) {
-        setText(e.target.value);
-    }
+  // received data from canvas component to room component
+  function CanvasToRoom(sendFromCanvas) {
+    console.log(sendFromCanvas);
+    sendCanvas(sendFromCanvas);
+    
+  }
 
-    function sendMessage() {
-        sendChannel.current.send(text);
-        setMessages(messages => [...messages, { yours: true, value: text }]);
-        setText("");
-    }
+  function sendMessage() {
+    sendChannel.current.send(text);
+    setMessages((messages) => [...messages, { yours: true, value: text }]);
+    setText("");
+  }
 
-    function renderMessage(message, index) {
-        if (message.yours) {
-            return (
-                <MyRow key={index}>
-                    <MyMessage>
-                        {message.value}
-                    </MyMessage>
-                </MyRow>
-            )
-        }
-
-        return (
-            <PartnerRow key={index}>
-                <PartnerMessage>
-                    {message.value}
-                </PartnerMessage>
-            </PartnerRow>
-        )
+  function renderMessage(message, index) {
+    if (message.yours) {
+      return (
+        <MyRow key={index}>
+          <MyMessage>{message.value}</MyMessage>
+        </MyRow>
+      );
     }
 
     return (
-        <Container>
-            <Messages>
-                {messages.map(renderMessage)}
-            </Messages>
-            <MessageBox value={text} onChange={handleChange} placeholder="Say something....." />
-            <Button onClick={sendMessage}>Send..</Button>
-        </Container>
+      <PartnerRow key={index}>
+        <PartnerMessage>{message.value}</PartnerMessage>
+      </PartnerRow>
     );
+  }
+
+  return (
+    <div>
+      <Messages>{messages.map(renderMessage)}</Messages>
+      <MessageBox
+        value={text}
+        onChange={handleChange}
+        placeholder="Say something....."
+      />
+      <Button onClick={sendMessage}>Send..</Button>
+      <Canvas
+        recievedCanvasData={recievedCanvasData}
+        CanvasToRoom={CanvasToRoom}
+        onChange={handleChange}
+      />
+    </div>
+  );
 };
 
 export default Room;

@@ -12,9 +12,9 @@ app.use(cors());
 
 io.on("connection", socket => {
     socket.on("join room", roomID => {
-        if (rooms[roomID]) {
+        if (rooms[roomID]) {    // 방에 사람 존재. 새로운 사람 들어올때 
             rooms[roomID].push(socket.id);
-        } else {
+        } else {   // 최초 방 실행자. 
             rooms[roomID] = [socket.id];
         }
         const otherUser = rooms[roomID].find(id => id !== socket.id);

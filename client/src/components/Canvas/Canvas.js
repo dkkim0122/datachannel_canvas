@@ -138,7 +138,6 @@ const Canvas = ({ recievedCanvasData, CanvasToRoom }) => {
     };
   }, []);
 
-  const changeZ = useRef(null);
   
   const [zIndex, setZindex] = useState(0);
   const changeZofCanvas = () => {
